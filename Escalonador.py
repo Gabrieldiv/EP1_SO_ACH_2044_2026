@@ -1,4 +1,5 @@
 import argparse
+import os
 
 from bcp import BLOQUEADO, ESPERA_ES, EXECUTANDO, PRONTO
 from carregador import carregar_programas
@@ -25,6 +26,10 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
     for p in processos:
         print(p.nome)
 
+    trocas = 0
+    instrucoes = 0
+    n_processos = len(processos)
+
     while processos or bloqueados:
         vivos = processos + bloqueados
         if all(p.creditos == 0 for p in vivos):
@@ -42,6 +47,8 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
         print()
         print(atual.nome, atual.creditos)
         n, motivo = executar_quantum(atual, quantum)
+        trocas += 1
+        instrucoes += n
         desbloquear(processos, bloqueados)
 
         if motivo == "QUANTUM":
@@ -55,7 +62,22 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
             print(f"{atual.nome} terminado. X={atual.x}. Y={atual.y}")
 
         print(n, motivo, atual.pc, atual.x, atual.y)
+        print(trocas, instrucoes)
+    media_trocas = trocas / n_processos
+    media_instrucoes = instrucoes / trocas
+
+    print(f"{media_trocas:.2f}")
+    print(f"{media_instrucoes:.2f}")
     print(len(bloqueados))
+
+    os.makedirs(saida, exist_ok=True)
+    caminho = os.path.join(saida, f"log{quantum:02d}.txt")
+    with open(caminho, mode="w", encoding="utf-8") as f:
+        f.write(
+            f"MEDIA DE TROCAS: {media_trocas:.2f}\n"
+            f"MEDIA DE INSTRUCOES: {media_instrucoes:.2f}\n"
+            f"QUANTUM: {quantum}"
+        )
 
 
 if __name__ == "__main__":
