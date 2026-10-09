@@ -1,3 +1,5 @@
+import argparse
+
 from bcp import BLOQUEADO, ESPERA_ES, EXECUTANDO, PRONTO
 from carregador import carregar_programas
 from interpretador import executar_quantum
@@ -12,8 +14,10 @@ def desbloquear(processos, bloqueados):
             bloqueados.remove(b)
 
 
-def escalonar(pasta):
+def escalonar(pasta, quantum_usuario=None):
     processos, quantum = carregar_programas(pasta)
+    if quantum_usuario is not None:
+        quantum = quantum_usuario
 
     bloqueados = []
     while processos or bloqueados:
@@ -22,9 +26,8 @@ def escalonar(pasta):
             for p in vivos:
                 p.creditos = p.prioridade
 
-
         if not processos:
-            desbloquear(processos,bloqueados)
+            desbloquear(processos, bloqueados)
             continue
 
         processos.sort(key=lambda p: p.creditos, reverse=True)
@@ -50,4 +53,9 @@ def escalonar(pasta):
 
 
 if __name__ == "__main__":
-    escalonar("programas")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--quantum", type=int)
+    parser.add_argument("--programas", default="programas")
+    parser.add_argument("--saida", default="logs")
+    args = parser.parse_args()
+    escalonar(args.programas, args.quantum)
