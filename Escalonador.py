@@ -15,9 +15,19 @@ def desbloquear(processos, bloqueados):
 def escalonar(pasta):
     processos, quantum = carregar_programas(pasta)
 
-    processos.sort(key=lambda p: p.creditos, reverse=True)
     bloqueados = []
-    while processos:
+    while processos or bloqueados:
+        vivos = processos + bloqueados
+        if all(p.creditos == 0 for p in vivos):
+            for p in vivos:
+                p.creditos = p.prioridade
+
+
+        if not processos:
+            desbloquear(processos,bloqueados)
+            continue
+
+        processos.sort(key=lambda p: p.creditos, reverse=True)
         atual = processos.pop(0)
         atual.estado = EXECUTANDO
         atual.creditos = max(0, atual.creditos - 1)
