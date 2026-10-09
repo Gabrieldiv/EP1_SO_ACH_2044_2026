@@ -14,12 +14,17 @@ def desbloquear(processos, bloqueados):
             bloqueados.remove(b)
 
 
-def escalonar(pasta, quantum_usuario=None):
+def escalonar(pasta, quantum_usuario=None, saida="logs"):
     processos, quantum = carregar_programas(pasta)
     if quantum_usuario is not None:
         quantum = quantum_usuario
 
     bloqueados = []
+    processos.sort(key=lambda p: p.creditos, reverse=True)
+
+    for p in processos:
+        print(p.nome)
+
     while processos or bloqueados:
         vivos = processos + bloqueados
         if all(p.creditos == 0 for p in vivos):
@@ -34,6 +39,7 @@ def escalonar(pasta, quantum_usuario=None):
         atual = processos.pop(0)
         atual.estado = EXECUTANDO
         atual.creditos = max(0, atual.creditos - 1)
+        print()
         print(atual.nome, atual.creditos)
         n, motivo = executar_quantum(atual, quantum)
         desbloquear(processos, bloqueados)
@@ -58,4 +64,4 @@ if __name__ == "__main__":
     parser.add_argument("--programas", default="programas")
     parser.add_argument("--saida", default="logs")
     args = parser.parse_args()
-    escalonar(args.programas, args.quantum)
+    escalonar(args.programas, args.quantum, args.saida)
