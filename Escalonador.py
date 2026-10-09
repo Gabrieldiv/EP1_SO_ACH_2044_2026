@@ -14,6 +14,14 @@ def escalonar(pasta):
         atual.creditos = max(0, atual.creditos - 1)
         print(atual.nome, atual.creditos)
         n, motivo = executar_quantum(atual, quantum)
+        for b in bloqueados[:]:
+            b.espera -=1
+            print(b.nome,b.espera)
+            if b.espera == 0:
+                b.estado = PRONTO
+                processos.append(b)
+                bloqueados.remove(b)
+
         if motivo == "QUANTUM":
             atual.estado = PRONTO
             processos.append(atual)
