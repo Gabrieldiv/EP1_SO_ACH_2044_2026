@@ -3,6 +3,15 @@ from carregador import carregar_programas
 from interpretador import executar_quantum
 
 
+def desbloquear(processos, bloqueados):
+    for b in bloqueados[:]:
+        b.espera -= 1
+        if b.espera == 0:
+            b.estado = PRONTO
+            processos.append(b)
+            bloqueados.remove(b)
+
+
 def escalonar(pasta):
     processos, quantum = carregar_programas(pasta)
 
@@ -14,13 +23,7 @@ def escalonar(pasta):
         atual.creditos = max(0, atual.creditos - 1)
         print(atual.nome, atual.creditos)
         n, motivo = executar_quantum(atual, quantum)
-        for b in bloqueados[:]:
-            b.espera -=1
-            print(b.nome,b.espera)
-            if b.espera == 0:
-                b.estado = PRONTO
-                processos.append(b)
-                bloqueados.remove(b)
+        desbloquear(processos, bloqueados)
 
         if motivo == "QUANTUM":
             atual.estado = PRONTO
