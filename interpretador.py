@@ -1,6 +1,7 @@
 from bcp import BCP
 
-def executar_quantum(bcp: BCP, quantum: int) -> tuple[int,str]:
+
+def executar_quantum(bcp: BCP, quantum: int) -> tuple[int, str]:
     executadas = 0
     while executadas < quantum:
         instrucao = bcp.texto[bcp.pc].strip()
