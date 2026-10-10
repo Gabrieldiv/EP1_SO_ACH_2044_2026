@@ -30,7 +30,12 @@ def rodar_escalonador(quantum, pasta_logs):
     ]
     try:
         resultado = subprocess.run(
-            comando, cwd=BASE, capture_output=True, text=True, timeout=TIMEOUT_S, check=False
+            comando,
+            cwd=BASE,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT_S,
+            check=False,
         )
     except subprocess.TimeoutExpired:
         sys.exit(
