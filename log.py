@@ -13,3 +13,15 @@ class Log:
 
     def fechar(self):
         self.arquivo.close()
+
+    def interrompendo(self, nome, n):
+        palavra = "instrução" if n == 1 else "instruções"
+        self.arquivo.write(f"Interrompendo {nome} após {n} {palavra}\n")
+
+    def terminado(self, nome, x, y):
+        self.arquivo.write(f"{nome} terminado. X={x}. Y={y}\n")
+
+    def rodape(self, media_trocas, media_instrucoes, quantum):
+        self.arquivo.write(f"MEDIA DE TROCAS: {media_trocas:.2f}\n")
+        self.arquivo.write(f"MEDIA DE INSTRUCOES: {media_instrucoes:.2f}\n")
+        self.arquivo.write(f"QUANTUM: {quantum}")
