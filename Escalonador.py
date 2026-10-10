@@ -1,11 +1,14 @@
 import argparse
 import os
+from pathlib import Path
 
 from bcp import BLOQUEADO, ESPERA_ES, EXECUTANDO, PRONTO
 from carregador import carregar_programas
 from estatisticas import Estatisticas
 from interpretador import executar_quantum
 from log import Log
+
+BASE = Path(__file__).resolve().parent  # Pasta onde está localizado Escalonador.py
 
 
 def desbloquear(prontos, bloqueados):
@@ -79,7 +82,7 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--quantum", type=int)
-    parser.add_argument("--programas", default="programas")
-    parser.add_argument("--saida", default="logs")
+    parser.add_argument("--programas", default=str(BASE / "programas"))
+    parser.add_argument("--saida", default=str(BASE / "logs"))
     args = parser.parse_args()
     escalonar(args.programas, args.quantum, args.saida)
