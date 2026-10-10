@@ -8,17 +8,20 @@ from interpretador import executar_quantum
 from log import Log
 
 
-def desbloquear(processos, bloqueados):
+def desbloquear(prontos, bloqueados):
     for b in bloqueados[:]:
         b.espera -= 1
         if b.espera == 0:
             b.estado = PRONTO
-            processos.append(b)
+            prontos.append(b)
             bloqueados.remove(b)
 
 
 def escalonar(pasta, quantum_usuario=None, saida="logs"):
-    processos, quantum = carregar_programas(pasta)
+    # Tabela de Processos: todos os BCPs ainda vivos (sai daqui ao executar SAIDA)
+    tabela, quantum = carregar_programas(pasta)
+    # Lista de prontos: ordenada por créditos (maior primeiro); é uma cópia da tabela
+    prontos = list(tabela)
     if quantum_usuario is not None:
         quantum = quantum_usuario
     os.makedirs(saida, exist_ok=True)
@@ -26,26 +29,26 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
     log = Log(caminho)
     estatisticas = Estatisticas()
 
+    # Lista de bloqueados: processos esperando a E/S, em ordem de chegada
     bloqueados = []
-    processos.sort(key=lambda p: p.creditos, reverse=True)
+    prontos.sort(key=lambda p: p.creditos, reverse=True)
 
-    for p in processos:
+    for p in prontos:
         log.carregando(p.nome)
 
-    n_processos = len(processos)
+    n_processos = len(tabela)
 
-    while processos or bloqueados:
-        vivos = processos + bloqueados
-        if all(p.creditos == 0 for p in vivos):
-            for p in vivos:
+    while tabela:
+        if all(p.creditos == 0 for p in tabela):
+            for p in tabela:
                 p.creditos = p.prioridade
 
-        if not processos:
-            desbloquear(processos, bloqueados)
+        if not prontos:
+            desbloquear(prontos, bloqueados)
             continue
 
-        processos.sort(key=lambda p: p.creditos, reverse=True)
-        atual = processos.pop(0)
+        prontos.sort(key=lambda p: p.creditos, reverse=True)
+        atual = prontos.pop(0)
         atual.estado = EXECUTANDO
         atual.creditos = max(0, atual.creditos - 1)
         log.executando(atual.nome)
@@ -54,17 +57,18 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
         if motivo == "ES":
             log.es_iniciada(atual.nome)
         log.interrompendo(atual.nome, n)
-        desbloquear(processos, bloqueados)
+        desbloquear(prontos, bloqueados)
 
         if motivo == "QUANTUM":
             atual.estado = PRONTO
-            processos.append(atual)
+            prontos.append(atual)
         elif motivo == "ES":
             atual.estado = BLOQUEADO
             atual.espera = ESPERA_ES
             bloqueados.append(atual)
         else:
             log.terminado(atual.nome, atual.x, atual.y)
+            tabela.remove(atual)
 
     media_trocas = estatisticas.media_trocas(n_processos)
     media_instrucoes = estatisticas.media_instrucoes()
