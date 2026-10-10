@@ -3,7 +3,9 @@ import os
 
 from bcp import BLOQUEADO, ESPERA_ES, EXECUTANDO, PRONTO
 from carregador import carregar_programas
+from estatisticas import Estatisticas
 from interpretador import executar_quantum
+from log import Log
 
 
 def desbloquear(processos, bloqueados):
@@ -19,15 +21,17 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
     processos, quantum = carregar_programas(pasta)
     if quantum_usuario is not None:
         quantum = quantum_usuario
+    os.makedirs(saida, exist_ok=True)
+    caminho = os.path.join(saida, f"log{quantum:02d}.txt")
+    log = Log(caminho)
+    estatisticas = Estatisticas()
 
     bloqueados = []
     processos.sort(key=lambda p: p.creditos, reverse=True)
 
     for p in processos:
-        print(p.nome)
+        log.carregando(p.nome)
 
-    trocas = 0
-    instrucoes = 0
     n_processos = len(processos)
 
     while processos or bloqueados:
@@ -44,11 +48,12 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
         atual = processos.pop(0)
         atual.estado = EXECUTANDO
         atual.creditos = max(0, atual.creditos - 1)
-        print()
-        print(atual.nome, atual.creditos)
+        log.executando(atual.nome)
         n, motivo = executar_quantum(atual, quantum)
-        trocas += 1
-        instrucoes += n
+        estatisticas.registrar(n)
+        if motivo == "ES":
+            log.es_iniciada(atual.nome)
+        log.interrompendo(atual.nome, n)
         desbloquear(processos, bloqueados)
 
         if motivo == "QUANTUM":
@@ -59,25 +64,12 @@ def escalonar(pasta, quantum_usuario=None, saida="logs"):
             atual.espera = ESPERA_ES
             bloqueados.append(atual)
         else:
-            print(f"{atual.nome} terminado. X={atual.x}. Y={atual.y}")
+            log.terminado(atual.nome, atual.x, atual.y)
 
-        print(n, motivo, atual.pc, atual.x, atual.y)
-        print(trocas, instrucoes)
-    media_trocas = trocas / n_processos
-    media_instrucoes = instrucoes / trocas
-
-    print(f"{media_trocas:.2f}")
-    print(f"{media_instrucoes:.2f}")
-    print(len(bloqueados))
-
-    os.makedirs(saida, exist_ok=True)
-    caminho = os.path.join(saida, f"log{quantum:02d}.txt")
-    with open(caminho, mode="w", encoding="utf-8") as f:
-        f.write(
-            f"MEDIA DE TROCAS: {media_trocas:.2f}\n"
-            f"MEDIA DE INSTRUCOES: {media_instrucoes:.2f}\n"
-            f"QUANTUM: {quantum}"
-        )
+    media_trocas = estatisticas.media_trocas(n_processos)
+    media_instrucoes = estatisticas.media_instrucoes()
+    log.rodape(media_trocas, media_instrucoes, quantum)
+    log.fechar()
 
 
 if __name__ == "__main__":
