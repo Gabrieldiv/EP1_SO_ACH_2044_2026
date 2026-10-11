@@ -45,7 +45,7 @@ def ler_programas(pasta):
         programas[nome] = {
             "qtd_instrucoes": len(instrucoes),
             "x_esperado": x,
-            "y_esperado": y
+            "y_esperado": y,
         }
 
     return programas
@@ -89,12 +89,16 @@ def validar_log(caminho_log, pasta_programas):
     if m_trocas:
         media_trocas = float(m_trocas.group(1))
     else:
-        erros.append("Rodapé: antepenúltima linha deveria ser 'MEDIA DE TROCAS: <número>'.")
+        erros.append(
+            "Rodapé: antepenúltima linha deveria ser 'MEDIA DE TROCAS: <número>'."
+        )
 
     if m_inst:
         media_inst = float(m_inst.group(1))
     else:
-        erros.append("Rodapé: penúltima linha deveria ser 'MEDIA DE INSTRUCOES: <número>'.")
+        erros.append(
+            "Rodapé: penúltima linha deveria ser 'MEDIA DE INSTRUCOES: <número>'."
+        )
 
     if m_quantum:
         quantum = int(m_quantum.group(1))
@@ -128,20 +132,28 @@ def validar_log(caminho_log, pasta_programas):
             carregados[nome] = carregados.get(nome, 0) + 1
 
             if nome not in programas:
-                erros.append(f"[Linha {numero}] Check 1: '{nome}' não existe na pasta de programas.")
+                erros.append(
+                    f"[Linha {numero}] Check 1: '{nome}' não existe na pasta de programas."
+                )
 
         elif m_exec:
             nome = m_exec.group(1)
             qtd_execucoes += 1
 
             if carregados.get(nome, 0) == 0:
-                erros.append(f"[Linha {numero}] Check 1: '{nome}' executado antes de ser carregado.")
+                erros.append(
+                    f"[Linha {numero}] Check 1: '{nome}' executado antes de ser carregado."
+                )
 
             if executando is not None:
-                erros.append(f"[Linha {numero}] Check 2: '{nome}' começou, mas '{executando}' não foi interrompido.")
+                erros.append(
+                    f"[Linha {numero}] Check 2: '{nome}' começou, mas '{executando}' não foi interrompido."
+                )
 
             if nome in terminados:
-                erros.append(f"[Linha {numero}] Check 6: '{nome}' executado depois de terminado.")
+                erros.append(
+                    f"[Linha {numero}] Check 6: '{nome}' executado depois de terminado."
+                )
 
             executando = nome
 
@@ -149,7 +161,9 @@ def validar_log(caminho_log, pasta_programas):
             nome = m_es.group(1)
 
             if executando != nome:
-                erros.append(f"[Linha {numero}] Check 2: E/S de '{nome}' sem estar executando.")
+                erros.append(
+                    f"[Linha {numero}] Check 2: E/S de '{nome}' sem estar executando."
+                )
 
         elif m_int:
             nome = m_int.group(1)
@@ -157,15 +171,21 @@ def validar_log(caminho_log, pasta_programas):
             qtd_interrupcoes += 1
 
             if executando != nome:
-                erros.append(f"[Linha {numero}] Check 2: interrupção de '{nome}' sem estar executando.")
+                erros.append(
+                    f"[Linha {numero}] Check 2: interrupção de '{nome}' sem estar executando."
+                )
             else:
                 executando = None
 
             if quantidade <= 0:
-                erros.append(f"[Linha {numero}] Check 3: '{nome}' informou {quantidade} instruções; deve ser maior que zero.")
+                erros.append(
+                    f"[Linha {numero}] Check 3: '{nome}' informou {quantidade} instruções; deve ser maior que zero."
+                )
 
             if quantum is not None and quantidade > quantum:
-                erros.append(f"[Linha {numero}] Check 3: '{nome}' executou {quantidade} instruções, acima do QUANTUM {quantum}.")
+                erros.append(
+                    f"[Linha {numero}] Check 3: '{nome}' executou {quantidade} instruções, acima do QUANTUM {quantum}."
+                )
 
             soma_instrucoes[nome] = soma_instrucoes.get(nome, 0) + quantidade
 
@@ -202,10 +222,14 @@ def validar_log(caminho_log, pasta_programas):
 
     for nome in sorted(nomes):
         if carregados.get(nome, 0) != 1:
-            erros.append(f"Check 1: '{nome}' carregado {carregados.get(nome, 0)} vez(es).")
+            erros.append(
+                f"Check 1: '{nome}' carregado {carregados.get(nome, 0)} vez(es)."
+            )
 
         if terminados.get(nome, 0) != 1:
-            erros.append(f"Check 1: '{nome}' terminado {terminados.get(nome, 0)} vez(es).")
+            erros.append(
+                f"Check 1: '{nome}' terminado {terminados.get(nome, 0)} vez(es)."
+            )
 
     # Check 4: contar somente as instruções registradas no log.
     for nome in programas:
@@ -213,20 +237,26 @@ def validar_log(caminho_log, pasta_programas):
         encontrado = soma_instrucoes.get(nome, 0)
 
         if encontrado != esperado:
-            erros.append(f"Check 4: '{nome}' soma {encontrado} instruções, mas o arquivo tem {esperado}.")
+            erros.append(
+                f"Check 4: '{nome}' soma {encontrado} instruções, mas o arquivo tem {esperado}."
+            )
 
     # Conferir os valores das médias.
     if media_trocas is not None and programas:
         calculada = qtd_interrupcoes / len(programas)
 
         if float(f"{calculada:.2f}") != media_trocas:
-            erros.append(f"Rodapé: MEDIA DE TROCAS {media_trocas}; calculada: {calculada:.2f}.")
+            erros.append(
+                f"Rodapé: MEDIA DE TROCAS {media_trocas}; calculada: {calculada:.2f}."
+            )
 
     if media_inst is not None and qtd_interrupcoes > 0:
         calculada = sum(soma_instrucoes.values()) / qtd_interrupcoes
 
         if float(f"{calculada:.2f}") != media_inst:
-            erros.append(f"Rodapé: MEDIA DE INSTRUCOES {media_inst}; calculada: {calculada:.2f}.")
+            erros.append(
+                f"Rodapé: MEDIA DE INSTRUCOES {media_inst}; calculada: {calculada:.2f}."
+            )
 
     return erros
 
@@ -236,7 +266,9 @@ if __name__ == "__main__":
         print("Uso: python validar_log.py logs/log03.txt")
         sys.exit(1)
 
-    pasta_programas = os.path.join(os.path.dirname(os.path.abspath(__file__)), "programas")
+    pasta_programas = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "programas"
+    )
     erros = validar_log(sys.argv[1], pasta_programas)
 
     if erros:
